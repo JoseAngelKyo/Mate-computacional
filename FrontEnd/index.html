@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matemática Computacional - TSP Held-Karp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
     <div class="app-container">
         <header class="app-header">
@@ -133,7 +137,8 @@
                     <div class="grid-2col">
                         <div class="card graph-card">
                             <div class="card-header flex-between">
-                                <h3><i class="fa-solid fa-circle-nodes"></i> Representación Visual del Grafo Ponderado</h3>
+                                <h3><i class="fa-solid fa-circle-nodes"></i> Representación Visual del Grafo Ponderado
+                                </h3>
                                 <div class="graph-toggles">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="chk-show-weights" checked onchange="renderGraph()">
@@ -147,13 +152,16 @@
                             </div>
                             <div class="tour-controls card-footer">
                                 <div class="player-buttons">
-                                    <button class="btn btn-icon" id="btn-prev-step" title="Paso Anterior" onclick="prevStep()">
+                                    <button class="btn btn-icon" id="btn-prev-step" title="Paso Anterior"
+                                        onclick="prevStep()">
                                         <i class="fa-solid fa-backward-step"></i>
                                     </button>
-                                    <button class="btn btn-icon btn-play" id="btn-play-pause" title="Reproducir / Pausa" onclick="togglePlayAnimation()">
+                                    <button class="btn btn-icon btn-play" id="btn-play-pause" title="Reproducir / Pausa"
+                                        onclick="togglePlayAnimation()">
                                         <i class="fa-solid fa-play" id="play-icon"></i>
                                     </button>
-                                    <button class="btn btn-icon" id="btn-next-step" title="Paso Siguiente" onclick="nextStep()">
+                                    <button class="btn btn-icon" id="btn-next-step" title="Paso Siguiente"
+                                        onclick="nextStep()">
                                         <i class="fa-solid fa-forward-step"></i>
                                     </button>
                                     <button class="btn btn-icon" title="Reiniciar Animación" onclick="resetAnimation()">
@@ -165,7 +173,8 @@
                                 </div>
                                 <div class="speed-control">
                                     <i class="fa-solid fa-gauge-high"></i>
-                                    <input type="range" id="anim-speed-slider" min="300" max="2500" value="1000" step="100" title="Velocidad">
+                                    <input type="range" id="anim-speed-slider" min="300" max="2500" value="1000"
+                                        step="100" title="Velocidad">
                                 </div>
                             </div>
                         </div>
@@ -217,7 +226,8 @@
                                     <h4><i class="fa-solid fa-shoe-prints"></i> Etapa Actual</h4>
                                 </div>
                                 <div class="leg-info-body" id="current-leg-info">
-                                    <p class="text-muted">Inicie la reproducción o avance de paso para examinar la secuencia.</p>
+                                    <p class="text-muted">Inicie la reproducción o avance de paso para examinar la
+                                        secuencia.</p>
                                 </div>
                             </div>
                         </div>
@@ -229,7 +239,8 @@
                         <div class="card-header flex-between">
                             <div>
                                 <h3><i class="fa-solid fa-table"></i> Matriz Simétrica de Costos (n×n)</h3>
-                                <p class="card-subtitle">Validación: diagonal principal nula, simétrica y valores positivos.</p>
+                                <p class="card-subtitle">Validación: diagonal principal nula, simétrica y valores
+                                    positivos.</p>
                             </div>
                             <div class="matrix-actions">
                                 <button class="btn btn-sm btn-outline" onclick="clearMatrixInputs()">
@@ -251,7 +262,8 @@
                     <div class="card">
                         <div class="card-header">
                             <h3><i class="fa-solid fa-list-ol"></i> Secuencia Algorítmica Paso a Paso</h3>
-                            <p class="card-subtitle">Detalle transparente de los vértices incorporados y el costo acumulado en cada etapa.</p>
+                            <p class="card-subtitle">Detalle transparente de los vértices incorporados y el costo
+                                acumulado en cada etapa.</p>
                         </div>
                         <div class="table-responsive">
                             <table class="table procedure-table" id="procedure-table">
@@ -269,7 +281,8 @@
                                 <tbody id="procedure-table-body">
                                     <tr>
                                         <td colspan="7" class="text-center py-4 text-muted">
-                                            No hay resultados procesados. Ejecute el algoritmo para ver la secuencia detallada.
+                                            No hay resultados procesados. Ejecute el algoritmo para ver la secuencia
+                                            detallada.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -279,7 +292,8 @@
 
                     <div class="card mt-4">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-layer-group"></i> Evolución de Subproblemas (Máscaras de Bits)</h3>
+                            <h3><i class="fa-solid fa-layer-group"></i> Evolución de Subproblemas (Máscaras de Bits)
+                            </h3>
                             <p class="card-subtitle">Programación dinámica estructurada por tamaño de subconjuntos.</p>
                         </div>
                         <div id="dp-summary-container" class="dp-summary-grid">
@@ -293,7 +307,8 @@
                         <div class="card">
                             <div class="card-header">
                                 <h3><i class="fa-solid fa-scale-balanced"></i> Ejemplo Práctico de Comparación</h3>
-                                <p class="card-subtitle">Demostración de cómo la secuencia de visita influye en el costo total.</p>
+                                <p class="card-subtitle">Demostración de cómo la secuencia de visita influye en el costo
+                                    total.</p>
                             </div>
                             <div class="theory-comparison-box">
                                 <div class="comparison-card comp-optimal">
@@ -312,7 +327,9 @@
                             </div>
                             <div class="theory-callout mt-3">
                                 <i class="fa-solid fa-lightbulb"></i>
-                                <p><strong>Conclusión:</strong> Variaciones en el orden de visita incrementan sensiblemente el costo operativo. Probar rutas al azar no garantiza el mínimo global sin un algoritmo exacto como Held-Karp.</p>
+                                <p><strong>Conclusión:</strong> Variaciones en el orden de visita incrementan
+                                    sensiblemente el costo operativo. Probar rutas al azar no garantiza el mínimo global
+                                    sin un algoritmo exacto como Held-Karp.</p>
                             </div>
                         </div>
 
@@ -346,7 +363,9 @@
                                     <i class="fa-solid fa-circle-check text-success"></i>
                                     <div>
                                         <strong>4. Optimización de Held-Karp:</strong>
-                                        <p>En lugar de evaluar todas las combinaciones por fuerza bruta, Held-Karp resuelve el problema eficientemente reutilizando soluciones de subproblemas parciales mediante memorización.</p>
+                                        <p>En lugar de evaluar todas las combinaciones por fuerza bruta, Held-Karp
+                                            resuelve el problema eficientemente reutilizando soluciones de subproblemas
+                                            parciales mediante memorización.</p>
                                     </div>
                                 </li>
                             </ul>
@@ -359,4 +378,5 @@
 
     <script src="./script.js"></script>
 </body>
+
 </html>
