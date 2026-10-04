@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matemática Computacional - TSP Held-Karp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+                <div>
+                    <h1>Matemática Computacional</h1>
+                    <p>Problema del Agente Viajero (TSP) • Algoritmo de Held-Karp (Programación dinámica)</p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-tech"><i class="fa-solid fa-calculator"></i> Programación Dinámica</span>
+                <span class="badge"><i class="fa-solid fa-bolt"></i> Held-Karp</span>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <aside class="sidebar-panel card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-sliders"></i> Configuración del Grafo</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="vertices-slider">
+                        <span>Número de Vértices (n):</span>
+                        <strong id="n-val-display">5</strong>
+                    </label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="vertices-slider" min="5" max="15" value="5" step="1">
+                        <div class="slider-marks">
+                            <span>5</span>
+                            <span>10</span>
+                            <span>15</span>
+                        </div>
+                    </div>
+                    <small class="help-text">Rango permitido: 5 ≤ n ≤ 15</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Modo de Construcción:</label>
+                    <div class="tab-buttons">
+                        <button type="button" class="tab-btn active" id="btn-mode-auto" onclick="setMode('auto')">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Automático
+                        </button>
+                        <button type="button" class="tab-btn" id="btn-mode-manual" onclick="setMode('manual')">
+                            <i class="fa-solid fa-keyboard"></i> Manual
+                        </button>
+                    </div>
+                </div>
+
+                <div id="auto-options" class="mode-options">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="min-cost-input">Costo Mín.</label>
+                            <input type="number" id="min-cost-input" value="1" min="1" max="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="max-cost-input">Costo Máx.</label>
+                            <input type="number" id="max-cost-input" value="20" min="2" max="100">
+                        </div>
+                    </div>
+                    <button id="btn-generate-random" class="btn btn-secondary w-100" onclick="generateRandomMatrix()">
+                        <i class="fa-solid fa-dice"></i> Generar Nueva Instancia
+                    </button>
+                </div>
+
+                <div id="manual-options" class="mode-options hidden">
+                    <div class="form-group checkbox-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" id="chk-auto-mirror" checked>
+                            <span class="checkmark"></span>
+                            <span>Espejo Simétrico Automático</span>
+                        </label>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="form-group">
+                    <button class="btn btn-outline w-100" onclick="loadTheoreticalExample()">
+                        <i class="fa-solid fa-book-bookmark"></i> Cargar Ejemplo Práctico
+                    </button>
+                </div>
+
+                <hr class="divider">
+
+                <div class="form-group">
+                    <button id="btn-solve-tsp" class="btn btn-primary w-100" onclick="solveTSP()">
+                        <i class="fa-solid fa-play"></i> Resolver Ruta Óptima
+                    </button>
+                </div>
+
+                <div id="validation-status-box" class="status-box status-valid">
+                    <i class="fa-solid fa-circle-check status-icon"></i>
+                    <div class="status-text">
+                        <strong id="status-title">Matriz Válida</strong>
+                        <p id="status-desc">Cumple simetría y diagonal nula.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="workspace-area">
+                <div class="view-tabs">
+                    <button class="view-tab active" onclick="switchView('graph-view')" id="tab-graph-view">
+                        <i class="fa-solid fa-project-diagram"></i> Grafo Ponderado & Animación
+                    </button>
+                    <button class="view-tab" onclick="switchView('matrix-view')" id="tab-matrix-view">
+                        <i class="fa-solid fa-table-cells"></i> Matriz de Costos (n×n)
+                    </button>
+                    <button class="view-tab" onclick="switchView('procedure-view')" id="tab-procedure-view">
+                        <i class="fa-solid fa-list-check"></i> Procedimiento Algorítmico
+                    </button>
+                    <button class="view-tab" onclick="switchView('theory-view')" id="tab-theory-view">
+                        <i class="fa-solid fa-graduation-cap"></i> Comparativa & Teoría
+                    </button>
+                </div>
+
+                <section id="graph-view" class="view-section active">
+                    <div class="grid-2col">
+                        <div class="card graph-card">
+                            <div class="card-header flex-between">
+                                <h3><i class="fa-solid fa-circle-nodes"></i> Representación Visual del Grafo Ponderado</h3>
+                                <div class="graph-toggles">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="chk-show-weights" checked onchange="renderGraph()">
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Mostrar Pesos</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="svg-container" id="svg-container">
+                                <svg id="graph-svg" width="100%" height="450" viewBox="0 0 600 450"></svg>
+                            </div>
+                            <div class="tour-controls card-footer">
+                                <div class="player-buttons">
+                                    <button class="btn btn-icon" id="btn-prev-step" title="Paso Anterior" onclick="prevStep()">
+                                        <i class="fa-solid fa-backward-step"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-play" id="btn-play-pause" title="Reproducir / Pausa" onclick="togglePlayAnimation()">
+                                        <i class="fa-solid fa-play" id="play-icon"></i>
+                                    </button>
+                                    <button class="btn btn-icon" id="btn-next-step" title="Paso Siguiente" onclick="nextStep()">
+                                        <i class="fa-solid fa-forward-step"></i>
+                                    </button>
+                                    <button class="btn btn-icon" title="Reiniciar Animación" onclick="resetAnimation()">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                                <div class="step-indicator">
+                                    Etapa <span id="current-step-num">0</span> / <span id="total-steps-num">0</span>
+                                </div>
+                                <div class="speed-control">
+                                    <i class="fa-solid fa-gauge-high"></i>
+                                    <input type="range" id="anim-speed-slider" min="300" max="2500" value="1000" step="100" title="Velocidad">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="solution-sidebar">
+                            <div class="metric-card metric-primary">
+                                <div class="metric-icon"><i class="fa-solid fa-trophy"></i></div>
+                                <div class="metric-data">
+                                    <span class="metric-label">Costo Total Mínimo</span>
+                                    <h2 id="metric-total-cost">--</h2>
+                                </div>
+                            </div>
+
+                            <div class="metric-card">
+                                <div class="metric-icon"><i class="fa-solid fa-route"></i></div>
+                                <div class="metric-data">
+                                    <span class="metric-label">Ciclo Hamiltoniano Óptimo</span>
+                                    <div class="route-pill-container" id="route-pill-container">
+                                        <span class="route-placeholder">Presiona "Resolver Ruta Óptima"</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="metric-grid">
+                                <div class="metric-card metric-sm">
+                                    <span class="metric-label">Rutas Evaluadas</span>
+                                    <h3 id="metric-brute-force">--</h3>
+                                    <small>Combinaciones Posibles</small>
+                                </div>
+                                <div class="metric-card metric-sm">
+                                    <span class="metric-label">Ops Held-Karp</span>
+                                    <h3 id="metric-held-karp">--</h3>
+                                    <small>Programación Dinámica</small>
+                                </div>
+                                <div class="metric-card metric-sm">
+                                    <span class="metric-label">Tiempo Cómputo</span>
+                                    <h3 id="metric-exec-time">--</h3>
+                                    <small>Milisegundos (ms)</small>
+                                </div>
+                                <div class="metric-card metric-sm">
+                                    <span class="metric-label">Vértices</span>
+                                    <h3 id="metric-node-count">5</h3>
+                                    <small>Nodos Ponderados</small>
+                                </div>
+                            </div>
+
+                            <div class="card leg-summary-card">
+                                <div class="card-header">
+                                    <h4><i class="fa-solid fa-shoe-prints"></i> Etapa Actual</h4>
+                                </div>
+                                <div class="leg-info-body" id="current-leg-info">
+                                    <p class="text-muted">Inicie la reproducción o avance de paso para examinar la secuencia.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="matrix-view" class="view-section">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <div>
+                                <h3><i class="fa-solid fa-table"></i> Matriz Simétrica de Costos (n×n)</h3>
+                                <p class="card-subtitle">Validación: diagonal principal nula, simétrica y valores positivos.</p>
+                            </div>
+                            <div class="matrix-actions">
+                                <button class="btn btn-sm btn-outline" onclick="clearMatrixInputs()">
+                                    <i class="fa-solid fa-eraser"></i> Limpiar
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="generateRandomMatrix()">
+                                    <i class="fa-solid fa-rotate"></i> Regenerar Valores
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="matrix-table" id="matrix-table"></table>
+                        </div>
+                        <div id="matrix-validation-alerts" class="validation-alerts"></div>
+                    </div>
+                </section>
+
+                <section id="procedure-view" class="view-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list-ol"></i> Secuencia Algorítmica Paso a Paso</h3>
+                            <p class="card-subtitle">Detalle transparente de los vértices incorporados y el costo acumulado en cada etapa.</p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table procedure-table" id="procedure-table">
+                                <thead>
+                                    <tr>
+                                        <th>Etapa</th>
+                                        <th>Origen</th>
+                                        <th>Destino</th>
+                                        <th>Tramo de Transición</th>
+                                        <th>Costo del Tramo</th>
+                                        <th>Costo Acumulado</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="procedure-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            No hay resultados procesados. Ejecute el algoritmo para ver la secuencia detallada.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-layer-group"></i> Evolución de Subproblemas (Máscaras de Bits)</h3>
+                            <p class="card-subtitle">Programación dinámica estructurada por tamaño de subconjuntos.</p>
+                        </div>
+                        <div id="dp-summary-container" class="dp-summary-grid">
+                            <p class="text-muted p-3">Ejecute el solver para explorar los subproblemas evaluados.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="theory-view" class="view-section">
+                    <div class="grid-2col">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-scale-balanced"></i> Ejemplo Práctico de Comparación</h3>
+                                <p class="card-subtitle">Demostración de cómo la secuencia de visita influye en el costo total.</p>
+                            </div>
+                            <div class="theory-comparison-box">
+                                <div class="comparison-card comp-optimal">
+                                    <div class="comp-badge"><i class="fa-solid fa-check"></i> Ruta Óptima Global</div>
+                                    <h4 class="comp-route">A → B → C → D → E → A</h4>
+                                    <p class="comp-legs">Tramo: 4 + 6 + 3 + 5 + 7</p>
+                                    <div class="comp-cost">Gasto Total: <strong>25 unidades</strong></div>
+                                </div>
+
+                                <div class="comparison-card comp-suboptimal">
+                                    <div class="comp-badge bad"><i class="fa-solid fa-xmark"></i> Ruta Subóptima</div>
+                                    <h4 class="comp-route">A → C → B → D → E → A</h4>
+                                    <p class="comp-legs">Tramo: 8 + 6 + 9 + 5 + 7</p>
+                                    <div class="comp-cost">Gasto Total: <strong>35 unidades</strong></div>
+                                </div>
+                            </div>
+                            <div class="theory-callout mt-3">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <p><strong>Conclusión:</strong> Variaciones en el orden de visita incrementan sensiblemente el costo operativo. Probar rutas al azar no garantiza el mínimo global sin un algoritmo exacto como Held-Karp.</p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-book-open"></i> Propiedades Fundamentales del Modelo TSP</h3>
+                            </div>
+                            <ul class="theory-list">
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>1. Diagonal Principal Nula:</strong>
+                                        <p>No existe costo de permanencia en el mismo nodo.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>2. Simetría Bidireccional:</strong>
+                                        <p>Mismo costo en ambos sentidos de circulación entre un par de vértices.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>3. Costos Estrictamente Positivos:</strong>
+                                        <p>Cualquier desplazamiento entre nodos distintos requiere recursos.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>4. Optimización de Held-Karp:</strong>
+                                        <p>En lugar de evaluar todas las combinaciones por fuerza bruta, Held-Karp resuelve el problema eficientemente reutilizando soluciones de subproblemas parciales mediante memorización.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
