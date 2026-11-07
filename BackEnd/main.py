@@ -67,6 +67,9 @@ def validate_matrix_structure(matrix: List[List[float]]) -> dict:
         return {"is_valid": False, "errors": errors, "warnings": warnings, "n": n}
 
     labels = get_node_labels(n)
+    if any(not math.isfinite(value) for row in matrix for value in row):
+        return {"is_valid": False, "errors": ["Los costos deben ser números finitos."],
+                "warnings": warnings, "n": n}
     for i in range(n):
         if abs(matrix[i][i]) > 1e-6:
             errors.append(
@@ -212,15 +215,16 @@ def health_check():
 
 @app.post("/api/matrix/generate")
 def generate_matrix(req: MatrixGenerateRequest):
-    if req.seed is not None:
-        random.seed(req.seed)
+    if req.min_cost > req.max_cost:
+        raise HTTPException(status_code=400, detail="El costo mínimo no puede superar al máximo.")
+    rng = random.Random(req.seed)
 
     n = req.n
     matrix = [[0.0] * n for _ in range(n)]
 
     for i in range(n):
         for j in range(i + 1, n):
-            val = float(random.randint(req.min_cost, req.max_cost))
+            val = float(rng.randint(req.min_cost, req.max_cost))
             matrix[i][j] = val
             matrix[j][i] = val
 
@@ -243,6 +247,8 @@ def solve_tsp(req: TSPSolveRequest):
         raise HTTPException(status_code=400, detail={
                             "errors": validation["errors"]})
 
+    if req.origin >= len(req.matrix):
+        raise HTTPException(status_code=400, detail="El nodo de origen está fuera de la matriz.")
     return solve_held_karp(req.matrix, origin=req.origin)
 
 

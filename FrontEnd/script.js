@@ -1,4 +1,5 @@
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = location.protocol === "file:" ? "http://127.0.0.1:8000/api" : "/api";
+let solveRequestId = 0;
 
 let state = {
     n: 5,
@@ -33,7 +34,6 @@ function randomizeNodeOffsets(n) {
 document.addEventListener("DOMContentLoaded", () => {
     initEventListeners();
     setVertexCount(5);
-    generateRandomMatrix();
 });
 
 function initEventListeners() {
@@ -53,6 +53,14 @@ function initEventListeners() {
 }
 
 function setVertexCount(n) {
+    if (state.mode === "auto") {
+        const minInput = document.getElementById("min-cost-input");
+        const maxInput = document.getElementById("max-cost-input");
+        if (!minInput.reportValidity() || !maxInput.reportValidity() || Number(minInput.value) > Number(maxInput.value)) {
+            document.getElementById("vertices-slider").value = state.n;
+            return;
+        }
+    }
     state.n = n;
     state.labels = getLabels(n);
     randomizeNodeOffsets(n);
@@ -87,8 +95,15 @@ function switchView(viewId) {
 }
 
 function generateRandomMatrix() {
-    const minVal = parseInt(document.getElementById("min-cost-input").value) || 1;
-    const maxVal = parseInt(document.getElementById("max-cost-input").value) || 20;
+    const minInput = document.getElementById("min-cost-input");
+    const maxInput = document.getElementById("max-cost-input");
+    const minVal = Number(minInput.value);
+    const maxVal = Number(maxInput.value);
+    if (!minInput.reportValidity() || !maxInput.reportValidity()) return;
+    if (!Number.isInteger(minVal) || !Number.isInteger(maxVal) || minVal <= 0 || minVal > maxVal) {
+        alert("Ingresa costos enteros positivos con mínimo menor o igual al máximo.");
+        return;
+    }
 
     const n = state.n;
     randomizeNodeOffsets(n);
@@ -104,8 +119,7 @@ function generateRandomMatrix() {
     }
 
     state.matrix = mat;
-    state.solution = null;
-    state.currentStep = 0;
+    invalidateSolution();
 
     renderMatrixTable();
     validateMatrixLocally();
@@ -131,6 +145,7 @@ function resizeMatrixKeepValues() {
     }
 
     state.matrix = newMat;
+    invalidateSolution();
     renderMatrixTable();
     validateMatrixLocally();
     renderGraph();
@@ -139,8 +154,7 @@ function resizeMatrixKeepValues() {
 function clearMatrixInputs() {
     const n = state.n;
     state.matrix = Array.from({ length: n }, () => Array(n).fill(0));
-    state.solution = null;
-    state.currentStep = 0;
+    invalidateSolution();
 
     renderMatrixTable();
     validateMatrixLocally();
@@ -184,6 +198,7 @@ function renderMatrixTable() {
 }
 
 function onCellInput(i, j, valueStr) {
+    invalidateSolution();
     const val = parseFloat(valueStr) || 0;
     state.matrix[i][j] = val;
 
@@ -230,11 +245,11 @@ function validateMatrixLocally() {
             const v1 = state.matrix[i][j];
             const v2 = state.matrix[j][i];
 
-            if (v1 <= 0) {
+            if (!Number.isFinite(v1) || v1 <= 0) {
                 errors.push(`Tramo ${labels[i]} → ${labels[j]} debe ser positivo.`);
                 markCellError(i, j);
             }
-            if (v2 <= 0) {
+            if (!Number.isFinite(v2) || v2 <= 0) {
                 errors.push(`Tramo ${labels[j]} → ${labels[i]} debe ser positivo.`);
                 markCellError(j, i);
             }
@@ -278,22 +293,11 @@ function markCellError(i, j) {
     if (inp) inp.classList.add("cell-error");
 }
 
-async function loadTheoreticalExample() {
-    setVertexCount(5);
+function loadTheoreticalExample() {
     setMode("manual");
-
-    try {
-        const res = await fetch(`${API_BASE}/preset/theoretical-example`);
-        if (res.ok) {
-            const data = await res.json();
-            state.matrix = data.matrix;
-        } else {
-            loadTheoreticalExampleFallback();
-        }
-    } catch (e) {
-        loadTheoreticalExampleFallback();
-    }
-
+    setVertexCount(5);
+    document.getElementById("vertices-slider").value = 5;
+    loadTheoreticalExampleFallback();
     renderMatrixTable();
     validateMatrixLocally();
     renderGraph();
@@ -317,24 +321,27 @@ async function solveTSP() {
         return;
     }
 
+    const requestId = ++solveRequestId;
+    const matrix = state.matrix.map(row => [...row]);
     let solution = null;
 
     try {
         const res = await fetch(`${API_BASE}/tsp/solve`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ matrix: state.matrix, origin: 0 })
+            body: JSON.stringify({ matrix, origin: 0 })
         });
 
         if (res.ok) {
             solution = await res.json();
         } else {
-            solution = solveHeldKarpClient(state.matrix);
+            solution = requestId === solveRequestId ? solveHeldKarpClient(matrix) : null;
         }
     } catch (e) {
-        solution = solveHeldKarpClient(state.matrix);
+        solution = requestId === solveRequestId ? solveHeldKarpClient(matrix) : null;
     }
 
+    if (requestId !== solveRequestId) return;
     state.solution = solution;
     state.currentStep = 0;
     pauseAnimation();
@@ -486,6 +493,22 @@ function getCombinations(n, k, mustInclude) {
     }
     backtrack(0, []);
     return results;
+}
+
+function invalidateSolution() {
+    solveRequestId++;
+    pauseAnimation();
+    state.solution = null;
+    state.currentStep = 0;
+    for (const id of ["metric-total-cost", "metric-brute-force", "metric-held-karp", "metric-exec-time"]) {
+        document.getElementById(id).innerText = "--";
+    }
+    document.getElementById("route-pill-container").innerHTML = '<span class="route-placeholder">Presiona "Resolver Ruta Óptima"</span>';
+    document.getElementById("current-step-num").innerText = 0;
+    document.getElementById("total-steps-num").innerText = 0;
+    updateLegInfoBox();
+    renderProcedureTable();
+    renderDPSummary();
 }
 
 function updateSolutionUI() {
@@ -705,6 +728,7 @@ function startAnimation() {
     if (!state.solution) return;
     if (state.currentStep >= state.solution.stages.length) {
         state.currentStep = 0;
+        stepChanged();
     }
     state.isPlaying = true;
     updatePlayIcon();
@@ -714,6 +738,7 @@ function startAnimation() {
 function pauseAnimation() {
     state.isPlaying = false;
     if (state.animTimer) clearInterval(state.animTimer);
+    state.animTimer = null;
     updatePlayIcon();
 }
 
