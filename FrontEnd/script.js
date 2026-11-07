@@ -8,6 +8,7 @@ let state = {
     labels: [],
     nodeOffsets: [],
     solution: null,
+    previewTour: null,
     currentStep: 0,
     isPlaying: false,
     animTimer: null,
@@ -119,6 +120,7 @@ function generateRandomMatrix() {
 
     state.matrix = mat;
     invalidateSolution();
+    showRandomTour();
 
     renderMatrixTable();
     validateMatrixLocally();
@@ -497,10 +499,50 @@ function getCombinations(n, k, mustInclude) {
     return results;
 }
 
+function showRandomTour() {
+    const startTime = performance.now();
+    const nodes = Array.from({ length: state.n - 1 }, (_, i) => i + 1);
+    for (let i = nodes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
+    }
+    const path = [0, ...nodes, 0];
+    const cost = path.slice(1).reduce((sum, v, i) => sum + state.matrix[path[i]][v], 0);
+    let accumulated = 0;
+    const stages = path.slice(1).map((v, i) => {
+        const u = path[i];
+        accumulated += state.matrix[u][v];
+        return { stage: i + 1, from_label: state.labels[u], to_label: state.labels[v],
+            leg_cost: state.matrix[u][v], accumulated_cost: accumulated };
+    });
+    const generationTime = performance.now() - startTime;
+    state.previewTour = { optimal_tour_indices: path, stages };
+    let possibleTours = 1;
+    for (let i = 2; i < state.n; i++) possibleTours *= i;
+    document.getElementById("metric-brute-force").innerText = (possibleTours / 2).toLocaleString();
+    document.getElementById("metric-held-karp").innerText = (state.n ** 2 * 2 ** state.n).toLocaleString();
+    document.getElementById("metric-exec-time").innerText = generationTime.toFixed(3);
+    document.getElementById("metric-time-description").innerText = "Generación del ciclo (ms)";
+    renderProcedureTable();
+    document.getElementById("total-steps-num").innerText = stages.length;
+    document.getElementById("cost-label").innerText = "Costo del Ciclo Inicial";
+    document.getElementById("tour-label").innerText = "Ciclo Aleatorio Inicial";
+    document.getElementById("metric-total-cost").innerText = cost.toFixed(1);
+    document.getElementById("route-pill-container").innerHTML = path.map(v =>
+        `<span class="route-node-tag">${state.labels[v]}</span>`
+    ).join('<i class="fa-solid fa-chevron-right route-arrow"></i>');
+    document.getElementById("current-leg-info").innerHTML =
+        '<p class="text-muted">Presiona ▶ para animar el ciclo inicial o «Resolver Ruta Óptima» para buscar el de menor costo.</p>';
+}
+
 function invalidateSolution() {
     solveRequestId++;
     pauseAnimation();
     state.solution = null;
+    state.previewTour = null;
+    document.getElementById("metric-time-description").innerText = "Milisegundos (ms)";
+    document.getElementById("cost-label").innerText = "Costo Total Mínimo";
+    document.getElementById("tour-label").innerText = "Ciclo Hamiltoniano Óptimo";
     state.currentStep = 0;
     for (const id of ["metric-total-cost", "metric-brute-force", "metric-held-karp", "metric-exec-time"]) {
         document.getElementById(id).innerText = "--";
@@ -521,6 +563,7 @@ function updateSolutionUI() {
     document.getElementById("metric-brute-force").innerText = sol.execution_stats.brute_force_tours.toLocaleString();
     document.getElementById("metric-held-karp").innerText = sol.execution_stats.held_karp_ops.toLocaleString();
     document.getElementById("metric-exec-time").innerText = sol.execution_stats.execution_time_ms;
+    document.getElementById("metric-time-description").innerText = "Optimización Held-Karp (ms)";
 
     const pillContainer = document.getElementById("route-pill-container");
     let pillHtml = "";
@@ -538,7 +581,7 @@ function updateSolutionUI() {
 }
 
 function updateLegInfoBox() {
-    const sol = state.solution;
+    const sol = state.solution || state.previewTour;
     const box = document.getElementById("current-leg-info");
     if (!sol || state.currentStep === 0) {
         box.innerHTML = `<p class="text-muted">Presiona 'Play' o usa los controles para animar la ruta paso a paso.</p>`;
@@ -567,7 +610,8 @@ function renderGraph() {
     const showWeights = document.getElementById("chk-show-weights").checked;
     const n = state.n;
     const labels = state.labels;
-    const sol = state.solution;
+    const sol = state.solution || state.previewTour;
+    const displayedStep = state.currentStep;
 
     svg.innerHTML = "";
 
@@ -611,7 +655,7 @@ function renderGraph() {
             const edgeKey1 = `${i}_${j}`;
             const stepNum = activeTourEdges.get(edgeKey1);
             const isTourEdge = stepNum !== undefined;
-            const isStepActive = isTourEdge && (state.currentStep >= stepNum);
+            const isStepActive = isTourEdge && (displayedStep >= stepNum);
             const isCurrentAnimStep = isTourEdge && (state.currentStep === stepNum);
 
             let strokeClass = "svg-edge";
@@ -644,10 +688,10 @@ function renderGraph() {
         let isNodeVisited = false;
         let isCurrentNode = false;
 
-        if (sol && sol.optimal_tour_indices && state.currentStep > 0) {
-            const currentVisitedPath = sol.optimal_tour_indices.slice(0, state.currentStep + 1);
+        if (sol && sol.optimal_tour_indices && displayedStep > 0) {
+            const currentVisitedPath = sol.optimal_tour_indices.slice(0, displayedStep + 1);
             isNodeVisited = currentVisitedPath.includes(pos.index);
-            isCurrentNode = sol.optimal_tour_indices[state.currentStep] === pos.index;
+            isCurrentNode = sol.optimal_tour_indices[displayedStep] === pos.index;
         }
 
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -667,7 +711,7 @@ function renderGraph() {
 }
 
 function renderProcedureTable() {
-    const sol = state.solution;
+    const sol = state.solution || state.previewTour;
     const tbody = document.getElementById("procedure-table-body");
     if (!sol) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Ejecute el algoritmo.</td></tr>`;
@@ -701,7 +745,7 @@ function renderDPSummary() {
     const sol = state.solution;
     const container = document.getElementById("dp-summary-container");
     if (!sol || !sol.dp_summary) {
-        container.innerHTML = `<p class="text-muted p-3">Ejecute el solver para explorar los subproblemas.</p>`;
+        container.innerHTML = `<p class="text-muted p-3" style="grid-column: 1 / -1;">Los subproblemas de Held-Karp se calculan al presionar «Resolver Ruta Óptima». La reproducción del ciclo inicial solo muestra sus tramos y costos.</p>`;
         return;
     }
 
@@ -721,7 +765,7 @@ function renderDPSummary() {
 function togglePlayAnimation() {
     if (state.isPlaying) {
         pauseAnimation();
-    } else if (!state.solution) {
+    } else if (!state.solution && !state.previewTour) {
         return solveTSP();
     } else {
         startAnimation();
@@ -729,8 +773,9 @@ function togglePlayAnimation() {
 }
 
 function startAnimation() {
-    if (!state.solution) return;
-    if (state.currentStep >= state.solution.stages.length) {
+    const tour = state.solution || state.previewTour;
+    if (!tour) return;
+    if (state.currentStep >= tour.stages.length) {
         state.currentStep = 0;
         stepChanged();
     }
@@ -749,11 +794,12 @@ function pauseAnimation() {
 function restartTimer() {
     if (state.animTimer) clearInterval(state.animTimer);
     state.animTimer = setInterval(() => {
-        if (!state.solution) return;
-        if (state.currentStep < state.solution.stages.length) {
+        const tour = state.solution || state.previewTour;
+        if (!tour) { pauseAnimation(); return; }
+        if (state.currentStep < tour.stages.length) {
             state.currentStep++;
             stepChanged();
-            if (state.currentStep === state.solution.stages.length) {
+            if (state.currentStep === tour.stages.length) {
                 pauseAnimation();
             }
         } else {
@@ -772,7 +818,8 @@ function prevStep() {
 
 function nextStep() {
     pauseAnimation();
-    if (state.solution && state.currentStep < state.solution.stages.length) {
+    const tour = state.solution || state.previewTour;
+    if (tour && state.currentStep < tour.stages.length) {
         state.currentStep++;
         stepChanged();
     }

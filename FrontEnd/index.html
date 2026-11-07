@@ -176,7 +176,7 @@
                             <div class="metric-card metric-primary">
                                 <div class="metric-icon"><i class="fa-solid fa-trophy"></i></div>
                                 <div class="metric-data">
-                                    <span class="metric-label">Costo Total Mínimo</span>
+                                    <span class="metric-label" id="cost-label">Costo Total Mínimo</span>
                                     <h2 id="metric-total-cost">--</h2>
                                 </div>
                             </div>
@@ -184,7 +184,7 @@
                             <div class="metric-card">
                                 <div class="metric-icon"><i class="fa-solid fa-route"></i></div>
                                 <div class="metric-data">
-                                    <span class="metric-label">Ciclo Hamiltoniano Óptimo</span>
+                                    <span class="metric-label" id="tour-label">Ciclo Hamiltoniano Óptimo</span>
                                     <div class="route-pill-container" id="route-pill-container">
                                         <span class="route-placeholder">Presiona "Resolver Ruta Óptima"</span>
                                     </div>
@@ -193,19 +193,19 @@
 
                             <div class="metric-grid">
                                 <div class="metric-card metric-sm">
-                                    <span class="metric-label">Rutas Evaluadas</span>
+                                    <span class="metric-label">Ciclos Posibles</span>
                                     <h3 id="metric-brute-force">--</h3>
                                     <small>Combinaciones Posibles</small>
                                 </div>
                                 <div class="metric-card metric-sm">
                                     <span class="metric-label">Ops Held-Karp</span>
                                     <h3 id="metric-held-karp">--</h3>
-                                    <small>Programación Dinámica</small>
+                                    <small>Estimación: n² × 2ⁿ</small>
                                 </div>
                                 <div class="metric-card metric-sm">
                                     <span class="metric-label">Tiempo Cómputo</span>
                                     <h3 id="metric-exec-time">--</h3>
-                                    <small>Milisegundos (ms)</small>
+                                    <small id="metric-time-description">Milisegundos (ms)</small>
                                 </div>
                                 <div class="metric-card metric-sm">
                                     <span class="metric-label">Vértices</span>
@@ -379,7 +379,7 @@
         </main>
     </div>
 
-    <script src="./script.js?v=6"></script>
+    <script src="./script.js?v=10"></script>
 </body>
 
 </html>
