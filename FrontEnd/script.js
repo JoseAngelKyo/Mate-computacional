@@ -123,7 +123,6 @@ function generateRandomMatrix() {
     renderMatrixTable();
     validateMatrixLocally();
     renderGraph();
-    solveTSP();
 }
 
 function resizeMatrixKeepValues() {
@@ -300,7 +299,6 @@ function loadTheoreticalExample() {
     renderMatrixTable();
     validateMatrixLocally();
     renderGraph();
-    solveTSP();
 }
 
 function loadTheoreticalExampleFallback() {
@@ -320,6 +318,8 @@ async function solveTSP() {
         return;
     }
 
+    invalidateSolution();
+    renderGraph();
     const requestId = ++solveRequestId;
     const matrix = state.matrix.map(row => [...row]);
     let solution = null;
@@ -327,6 +327,7 @@ async function solveTSP() {
     try {
         const res = await fetch(`${API_BASE}/tsp/solve`, {
             method: "POST",
+            signal: AbortSignal.timeout(8000),
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ matrix, origin: 0 })
         });
@@ -349,6 +350,8 @@ async function solveTSP() {
     renderGraph();
     renderProcedureTable();
     renderDPSummary();
+    switchView("graph-view");
+    startAnimation();
 }
 
 function solveHeldKarpClient(matrix, origin = 0) {
@@ -718,6 +721,8 @@ function renderDPSummary() {
 function togglePlayAnimation() {
     if (state.isPlaying) {
         pauseAnimation();
+    } else if (!state.solution) {
+        return solveTSP();
     } else {
         startAnimation();
     }
@@ -748,6 +753,9 @@ function restartTimer() {
         if (state.currentStep < state.solution.stages.length) {
             state.currentStep++;
             stepChanged();
+            if (state.currentStep === state.solution.stages.length) {
+                pauseAnimation();
+            }
         } else {
             pauseAnimation();
         }
