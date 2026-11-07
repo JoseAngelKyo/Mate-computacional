@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./style.css?v=3">
+    <link rel="stylesheet" href="./style.css?v=5">
 </head>
 
 <body>
@@ -128,6 +128,9 @@
                     </button>
                     <button class="view-tab" onclick="switchView('theory-view')" id="tab-theory-view">
                         <i class="fa-solid fa-graduation-cap"></i> Comparativa & Teoría
+                    </button>
+                    <button class="view-tab" onclick="switchView('resolution-view')" id="tab-resolution-view">
+                        <i class="fa-solid fa-check-double"></i> Resolución
                     </button>
                 </div>
 
@@ -295,6 +298,34 @@
                     </div>
                 </section>
 
+                <section id="resolution-view" class="view-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-check-double"></i> Resolución del Ejercicio</h3>
+                            <p class="card-subtitle">Ciclos posibles del grafo actual y suma de sus costos. Todos parten de A y regresan a A.
+                                Un recorrido y su inverso cuentan como el mismo ciclo.</p>
+                        </div>
+                        <div id="resolution-result" class="resolution-result" aria-live="polite"></div>
+                        <div id="resolution-initial" class="resolution-result resolution-initial" hidden></div>
+                        <p class="help-text">Esta tabla permite comparar los ciclos. Held-Karp encuentra el mínimo mediante subproblemas; no necesita recorrer esta lista completa.</p>
+                        <div class="table-responsive">
+                            <table class="table resolution-table">
+                                <thead><tr><th>N.º</th><th>Ciclo Hamiltoniano</th><th>Suma de Costos</th><th>Costo Total</th><th>Resultado</th></tr></thead>
+                                <tbody id="resolution-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="resolution-pagination">
+                            <button class="btn btn-outline btn-sm" id="resolution-prev" onclick="changeResolutionPage(-1)">Anterior</button>
+                            <label for="resolution-page">Página
+                                <input id="resolution-page" type="number" min="1" step="1" value="1" onchange="goToResolutionPage(this.value)">
+                            </label>
+                            <span id="resolution-page-count"></span>
+                            <button class="btn btn-outline btn-sm" id="resolution-next" onclick="changeResolutionPage(1)">Siguiente</button>
+                            <span id="resolution-count" class="help-text"></span>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="theory-view" class="view-section">
                     <div class="theory-layout">
                         <div class="card theory-concepts">
@@ -379,7 +410,7 @@
         </main>
     </div>
 
-    <script src="./script.js?v=10"></script>
+    <script src="./script.js?v=12"></script>
 </body>
 
 </html>

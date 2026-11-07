@@ -3,12 +3,14 @@ let solveRequestId = 0;
 
 let state = {
     n: 5,
+    resolutionPage: 0,
     mode: "auto",
     matrix: [],
     labels: [],
     nodeOffsets: [],
     solution: null,
     previewTour: null,
+    initialTourPath: null,
     currentStep: 0,
     isPlaying: false,
     animTimer: null,
@@ -88,6 +90,8 @@ function switchView(viewId) {
 
     document.getElementById(`tab-${viewId}`).classList.add("active");
     document.getElementById(viewId).classList.add("active");
+
+    if (viewId === "resolution-view") renderResolution();
 
     if (viewId === "graph-view") {
         renderGraph();
@@ -320,7 +324,9 @@ async function solveTSP() {
         return;
     }
 
+    const initialPath = state.initialTourPath;
     invalidateSolution();
+    state.initialTourPath = initialPath;
     renderGraph();
     const requestId = ++solveRequestId;
     const matrix = state.matrix.map(row => [...row]);
@@ -517,6 +523,7 @@ function showRandomTour() {
     });
     const generationTime = performance.now() - startTime;
     state.previewTour = { optimal_tour_indices: path, stages };
+    state.initialTourPath = [...path];
     let possibleTours = 1;
     for (let i = 2; i < state.n; i++) possibleTours *= i;
     document.getElementById("metric-brute-force").innerText = (possibleTours / 2).toLocaleString();
@@ -536,10 +543,12 @@ function showRandomTour() {
 }
 
 function invalidateSolution() {
+    state.resolutionPage = 0;
     solveRequestId++;
     pauseAnimation();
     state.solution = null;
     state.previewTour = null;
+    state.initialTourPath = null;
     document.getElementById("metric-time-description").innerText = "Milisegundos (ms)";
     document.getElementById("cost-label").innerText = "Costo Total Mínimo";
     document.getElementById("tour-label").innerText = "Ciclo Hamiltoniano Óptimo";
@@ -606,6 +615,7 @@ function updateLegInfoBox() {
 }
 
 function renderGraph() {
+    if (document.getElementById("resolution-view").classList.contains("active")) renderResolution();
     const svg = document.getElementById("graph-svg");
     const showWeights = document.getElementById("chk-show-weights").checked;
     const n = state.n;
@@ -848,3 +858,100 @@ function updatePlayIcon() {
 }
 
 
+
+function resolutionFactorial(n) {
+    let value = 1;
+    for (let i = 2; i <= n; i++) value *= i;
+    return value;
+}
+
+// Choose the two neighbors of A in ascending order, then unrank the middle
+// permutation. This lists every undirected cycle once without storing them all.
+function resolutionCycleAt(n, index) {
+    const blockSize = resolutionFactorial(n - 3);
+    let pairIndex = Math.floor(index / blockSize);
+    let rank = index % blockSize;
+    let first, last;
+    outer: for (let a = 1; a < n; a++) {
+        for (let b = a + 1; b < n; b++) {
+            if (pairIndex-- === 0) { first = a; last = b; break outer; }
+        }
+    }
+    const available = Array.from({ length: n - 1 }, (_, i) => i + 1)
+        .filter(v => v !== first && v !== last);
+    const path = [0, first];
+    while (available.length) {
+        const size = resolutionFactorial(available.length - 1);
+        path.push(available.splice(Math.floor(rank / size), 1)[0]);
+        rank %= size;
+    }
+    return [...path, last, 0];
+}
+
+function changeResolutionPage(delta) {
+    goToResolutionPage(state.resolutionPage + delta + 1);
+}
+
+function goToResolutionPage(value) {
+    const pages = Math.ceil(resolutionFactorial(state.n - 1) / 2 / 50);
+    const page = Number(value);
+    if (Number.isInteger(page) && page >= 1 && page <= pages) state.resolutionPage = page - 1;
+    renderResolution();
+}
+
+function renderResolution() {
+    const tbody = document.getElementById("resolution-table-body");
+    const result = document.getElementById("resolution-result");
+    const valid = state.matrix.length === state.n && state.matrix.every((row, i) =>
+        row.length === state.n && row.every((v, j) => Number.isFinite(v) &&
+            (i === j ? v === 0 : v > 0 && Math.abs(v - state.matrix[j]?.[i]) <= 1e-5)));
+    const total = valid ? resolutionFactorial(state.n - 1) / 2 : 0;
+    const pages = Math.max(1, Math.ceil(total / 50));
+    state.resolutionPage = Math.min(state.resolutionPage, pages - 1);
+    const start = state.resolutionPage * 50;
+    const end = Math.min(start + 50, total);
+    const costOf = path => path.slice(1).reduce((sum, v, i) => sum + state.matrix[path[i]][v], 0);
+    const bestCost = valid && state.solution ? costOf(state.solution.optimal_tour_indices) : null;
+    result.classList.toggle("resolution-optimal", bestCost !== null);
+    if (!valid) {
+        result.textContent = "Completa una matriz simétrica con costos positivos para consultar sus ciclos.";
+    } else if (bestCost === null) {
+        result.textContent = "Presiona «Resolver Ruta Óptima» para identificar en verde los ciclos de costo mínimo.";
+    } else {
+        result.textContent = `Solución óptima: ${state.solution.optimal_tour_labels.join(" → ")} · Costo: ${bestCost}. Este ciclo es una solución correcta porque tiene el menor costo total. Si hay empates, los otros ciclos de igual costo también son óptimos.`;
+    }
+    const initial = valid ? state.initialTourPath : null;
+    const initialKey = initial ? (initial[1] < initial[initial.length - 2] ? initial : [...initial].reverse()).join(",") : null;
+    const isMinimum = cost => bestCost !== null && Math.abs(cost - bestCost) <=
+        Number.EPSILON * 32 * Math.max(1, Math.abs(cost), Math.abs(bestCost));
+    const initialBox = document.getElementById("resolution-initial");
+    initialBox.hidden = !initial;
+    if (initial) {
+        const initialCost = costOf(initial);
+        initialBox.className = `resolution-result ${isMinimum(initialCost) ? "resolution-optimal" : "resolution-initial"}`;
+        initialBox.textContent = `Ciclo inicial de esta instancia: ${initial.map(v => state.labels[v]).join(" → ")} · Costo: ${Number(initialCost.toPrecision(15))}. ${bestCost === null ? "Pendiente de comparar con la ruta óptima." : isMinimum(initialCost) ? "Este ciclo también es óptimo." : "Su costo es mayor que el de la ruta óptima."}`;
+    }
+    let html = "";
+    for (let i = start; i < end; i++) {
+        const path = resolutionCycleAt(state.n, i);
+        const legs = path.slice(1).map((v, j) => state.matrix[path[j]][v]);
+        const cost = costOf(path);
+        const optimal = isMinimum(cost);
+        const isInitial = path.join(",") === initialKey;
+        html += `<tr class="${optimal ? "resolution-optimal" : isInitial ? "resolution-initial" : ""}">
+            <td>${(i + 1).toLocaleString()}</td>
+            <td>${path.map(v => state.labels[v]).join(" → ")}</td>
+            <td>${legs.join(" + ")}</td><td><strong>${Number(cost.toPrecision(15))}</strong></td>
+            <td>${isInitial ? "Ciclo inicial · " : ""}${optimal ? "✓ Ruta óptima — solución correcta" : bestCost === null ? "Sin optimizar" : "Mayor costo"}</td></tr>`;
+    }
+    tbody.innerHTML = html || '<tr><td colspan="5">No hay ciclos válidos para mostrar.</td></tr>';
+    document.getElementById("resolution-prev").disabled = state.resolutionPage === 0;
+    document.getElementById("resolution-next").disabled = state.resolutionPage + 1 >= pages;
+    const input = document.getElementById("resolution-page");
+    input.value = state.resolutionPage + 1;
+    input.max = pages;
+    input.disabled = !valid;
+    document.getElementById("resolution-page-count").innerText = `de ${pages.toLocaleString()}`;
+    document.getElementById("resolution-count").innerText = total ?
+        `Mostrando ${(start + 1).toLocaleString()}–${end.toLocaleString()} de ${total.toLocaleString()} ciclos (50 por página).` : "";
+}
