@@ -31,10 +31,16 @@ function randomizeNodeOffsets(n) {
     }));
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initializeApp() {
     initEventListeners();
     setVertexCount(5);
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeApp, { once: true });
+} else {
+    initializeApp();
+}
 
 function initEventListeners() {
     const slider = document.getElementById("vertices-slider");
@@ -43,13 +49,6 @@ function initEventListeners() {
         setVertexCount(val);
     });
 
-    const speedSlider = document.getElementById("anim-speed-slider");
-    speedSlider.addEventListener("input", (e) => {
-        state.animSpeed = parseInt(e.target.value);
-        if (state.isPlaying) {
-            restartTimer();
-        }
-    });
 }
 
 function setVertexCount(n) {
