@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./style.css?v=3">
 </head>
 
 <body>
@@ -91,8 +91,6 @@
                         </label>
                     </div>
                 </div>
-
-                <br>
 
                 <div class="form-group">
                     <button class="btn btn-outline w-100" onclick="loadTheoreticalExample()">
@@ -298,12 +296,61 @@
                 </section>
 
                 <section id="theory-view" class="view-section">
-                    <div class="grid-2col">
+                    <div class="theory-layout">
+                        <div class="card theory-concepts">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-book-open"></i> Entiende el recorrido</h3>
+                            </div>
+                            <ul class="theory-list">
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>¿Qué busca el agente viajero?</strong>
+                                        <p>Visitar todas las ciudades y regresar al punto de partida con el menor costo total. En el grafo, cada vértice representa una ciudad y cada conexión tiene un costo.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>¿Qué es un ciclo hamiltoniano?</strong>
+                                        <p>Es un recorrido que visita cada ciudad una sola vez y vuelve al inicio. Por ejemplo: A → B → C → D → E → A. Solo se repite A para cerrar el ciclo.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>¿Para qué sirve ese ciclo?</strong>
+                                        <p>Asegura que se visiten todas las ciudades sin omitir ninguna. Entre todos los ciclos posibles, el TSP busca uno de costo mínimo.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>¿Cómo se calcula el costo?</strong>
+                                        <p>Se suman los pesos de las conexiones recorridas. En el ejemplo: 4 + 6 + 3 + 5 + 7 = 25. La longitud de las líneas dibujadas no determina el costo.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>¿Qué hace Held-Karp?</strong>
+                                        <p>Guarda el menor costo de llegar a una ciudad tras visitar un conjunto de ciudades y reutiliza esos resultados. Así encuentra una ruta de costo mínimo y añade el regreso al origen.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <div>
+                                        <strong>¿Qué condiciones usa este programa?</strong>
+                                        <p>La matriz tiene ceros en la diagonal, costos positivos entre ciudades distintas y el mismo costo en ambos sentidos. Todas las ciudades están conectadas entre sí.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
                         <div class="card">
                             <div class="card-header">
                                 <h3><i class="fa-solid fa-scale-balanced"></i> Ejemplo Práctico de Comparación</h3>
-                                <p class="card-subtitle">Demostración de cómo la secuencia de visita influye en el costo
-                                    total.</p>
+                                <p class="card-subtitle">Ejemplo fijo de «Cargar Ejemplo Práctico»: cambiar el orden de visita cambia el costo total.</p>
                             </div>
                             <div class="theory-comparison-box">
                                 <div class="comparison-card comp-optimal">
@@ -322,48 +369,9 @@
                             </div>
                             <div class="theory-callout mt-3">
                                 <i class="fa-solid fa-lightbulb"></i>
-                                <p><strong>Conclusión:</strong> Variaciones en el orden de visita incrementan
-                                    sensiblemente el costo operativo. Probar rutas al azar no garantiza el mínimo global
-                                    sin un algoritmo exacto como Held-Karp.</p>
+                                <p><strong>¿Qué nos muestra el ejemplo?</strong> Ambas rutas visitan todas las ciudades y
+                                    regresan a A, pero cuestan distinto. El agente viajero busca el menor costo posible.</p>
                             </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">
-                                <h3><i class="fa-solid fa-book-open"></i> Propiedades Fundamentales del Modelo TSP</h3>
-                            </div>
-                            <ul class="theory-list">
-                                <li>
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <div>
-                                        <strong>1. Diagonal Principal Nula:</strong>
-                                        <p>No existe costo de permanencia en el mismo nodo.</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <div>
-                                        <strong>2. Simetría Bidireccional:</strong>
-                                        <p>Mismo costo en ambos sentidos de circulación entre un par de vértices.</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <div>
-                                        <strong>3. Costos Estrictamente Positivos:</strong>
-                                        <p>Cualquier desplazamiento entre nodos distintos requiere recursos.</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <div>
-                                        <strong>4. Optimización de Held-Karp:</strong>
-                                        <p>En lugar de evaluar todas las combinaciones por fuerza bruta, Held-Karp
-                                            resuelve el problema eficientemente reutilizando soluciones de subproblemas
-                                            parciales mediante memorización.</p>
-                                    </div>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </section>

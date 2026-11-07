@@ -1016,3 +1016,109 @@ input[type="range"]::-webkit-slider-thumb {
 .mt-4 {
     margin-top: 1.25rem;
 }
+/* Concepts are separate cards; examples stay together below them. */
+#theory-view .theory-layout {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
+#theory-view .theory-concepts {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+#theory-view .theory-concepts .card-header {
+    padding: 0.25rem 0 1rem;
+}
+
+#theory-view .theory-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+    counter-reset: concept;
+}
+
+#theory-view .theory-list li {
+    counter-increment: concept;
+    display: block;
+    min-width: 0;
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+#theory-view .theory-list li > i {
+    display: none;
+}
+
+#theory-view .theory-list li::before {
+    content: counter(concept, decimal-leading-zero);
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    margin-bottom: 0.85rem;
+    background: #eff6ff;
+    border-radius: 8px;
+    color: var(--accent-blue);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+#theory-view .theory-list strong {
+    display: block;
+    font-size: 0.95rem;
+}
+
+#theory-view .theory-list p {
+    margin-top: 0.6rem;
+    line-height: 1.7;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+#theory-view .theory-comparison-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+}
+
+#theory-view .comp-route {
+    margin: 0.4rem 0;
+    overflow-wrap: anywhere;
+}
+
+/* Keep configuration labels and manual controls aligned. */
+.sidebar-panel .card-header h2 {
+    font-size: 1.25rem;
+    line-height: 1.35;
+    gap: 0.65rem;
+}
+
+.sidebar-panel .card-header h2 i {
+    flex-shrink: 0;
+}
+
+.sidebar-panel .form-group label.custom-checkbox {
+    justify-content: flex-start;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: #f8fafc;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.sidebar-panel .mode-options {
+    margin-bottom: 1rem;
+}
+
+.sidebar-panel .checkbox-group {
+    margin: 0;
+}
